@@ -28,7 +28,7 @@ from great_expectations.cli.util import cli_message, is_sane_slack_webhook
 from great_expectations.exceptions import (
     DataContextError,
     DatasourceInitializationError,
-)
+    InvalidConfigError)
 
 try:
     from sqlalchemy.exc import SQLAlchemyError
@@ -36,6 +36,12 @@ except ImportError:
     # We'll redefine this error in code below to catch ProfilerError, which is caught above, so SA errors will
     # just fall through
     SQLAlchemyError = ge_exceptions.ProfilerError
+
+
+def offer_repair():
+    if click.confirm("Would you like to attempt to repair the config file:", default=True):
+
+        print('ok!!!')
 
 
 @click.command()
@@ -67,24 +73,30 @@ def init(target_directory, view):
     cli_message(GREETING)
 
     if DataContext.does_config_exist_on_disk(ge_dir):
+        print("\n\nLINE 70\n\n")
         try:
             if DataContext.is_project_initialized(ge_dir):
+                print("\n\nLINE 73\n\n")
                 # Ensure the context can be instantiated
                 cli_message(PROJECT_IS_COMPLETE)
         except (DataContextError, DatasourceInitializationError) as e:
             cli_message("<red>{}</red>".format(e.message))
             sys.exit(1)
-        else:
-            try:
-                context = DataContext.create(target_directory)
-                cli_message(ONBOARDING_COMPLETE)
-                # TODO if this is correct, ensure this is covered by a test
-                # cli_message(SETUP_SUCCESS)
-                # exit(0)
-            except DataContextError as e:
-                cli_message("<red>{}</red>".format(e.message))
-                # TODO ensure this is covered by a test
-                exit(5)
+
+        try:
+            context = DataContext.create(target_directory)
+            cli_message(ONBOARDING_COMPLETE)
+            # TODO if this is correct, ensure this is covered by a test
+            # cli_message(SETUP_SUCCESS)
+            # exit(0)
+        except InvalidConfigError as e:
+            # TODO ensure this is covered by a test
+            offer_repair()
+            cli_message("<red>{}</red>".format(e.message))
+        except DataContextError as e:
+            cli_message("<red>{}</red>".format(e.message))
+            # TODO ensure this is covered by a test
+            exit(5)
     else:
         if not click.confirm(LETS_BEGIN_PROMPT, default=True):
             cli_message(RUN_INIT_AGAIN)

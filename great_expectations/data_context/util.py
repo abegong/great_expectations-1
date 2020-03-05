@@ -165,7 +165,11 @@ def substitute_config_variable(template_str, config_variables_dict):
             else:
                 return template_str[:match.start()] + config_variable_value + template_str[match.end():]
 
-        raise InvalidConfigError("Unable to find match for config variable {:s}. See https://great-expectations.readthedocs.io/en/latest/reference/data_context_reference.html#managing-environment-and-secrets".format(match.group(1)))
+        raise InvalidConfigError(
+            f"""\n\nUnable to find match for config variable `{match.group(1)}`.
+Please add this missing variable to your `uncommitted/config_variables.yml` file.
+See https://great-expectations.readthedocs.io/en/latest/reference/data_context_reference.html#managing-environment-and-secrets"""
+        )
 
     return template_str
 

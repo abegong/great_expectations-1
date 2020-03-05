@@ -1358,14 +1358,18 @@ class DataContext(BaseDataContext):
     @classmethod
     def config_variables_yml_exist(cls, ge_dir):
         """Check if all config_variables.yml exists."""
-        path_to_yml = os.path.join(ge_dir, cls.GE_YML)
+        config_var_path = cls.find_config_variables_yml_path(ge_dir)
+        return os.path.isfile(config_var_path)
 
+    @classmethod
+    def find_config_variables_yml_path(cls, ge_dir):
+        path_to_yml = os.path.join(ge_dir, cls.GE_YML)
         # TODO this is so brittle and gross
         with open(path_to_yml, "r") as f:
             config = yaml.load(f)
         config_var_path = config.get("config_variables_file_path")
         config_var_path = os.path.join(ge_dir, config_var_path)
-        return os.path.isfile(config_var_path)
+        return config_var_path
 
     @classmethod
     def write_config_variables_template_to_disk(cls, uncommitted_dir):
@@ -1432,6 +1436,12 @@ class DataContext(BaseDataContext):
                 destination_path = os.path.join(subdir_path, notebook_name)
                 shutil.copyfile(notebook, destination_path)
 
+    @classmethod
+    def attempt_config_repair(cls, base_dir):
+        context_config_path = os.path.join(base_dir, cls.GE_DIR, cls.GE_YML)
+        config_var_path = os.path.join(base_dir, cls.GE_DIR, cls.GE_UNCOMMITTED_DIR, cls.)
+        return False
+
     def list_expectation_suite_names(self):
         """Lists the available expectation suite names"""
         sorted_expectation_suite_names = [i.expectation_suite_name for i in self.list_expectation_suites()]
@@ -1439,7 +1449,6 @@ class DataContext(BaseDataContext):
         return sorted_expectation_suite_names
 
     def __init__(self, context_root_dir=None):
-
         # Determine the "context root directory" - this is the parent of "great_expectations" dir
         if context_root_dir is None:
             context_root_dir = self.find_context_root_dir()

@@ -26,7 +26,8 @@ from great_expectations.data_context.util import (
 )
 from great_expectations.datasource import Datasource
 from great_expectations.datasource.types.batch_kwargs import PathBatchKwargs
-from great_expectations.exceptions import DataContextError, ProfilerError, ConfigNotFoundError
+from great_expectations.exceptions import DataContextError, ProfilerError, \
+    ConfigNotFoundError, InvalidConfigError
 from great_expectations.util import gen_directory_tree_str
 from tests.test_utils import safe_remove
 
@@ -1077,3 +1078,31 @@ def test_list_expectation_suite_with_multiple_suites(titanic_data_context):
     assert isinstance(observed, list)
     assert observed == ['a.warning', 'b.warning', 'c.warning']
     assert len(observed) == 3
+
+
+def tests_attempt_config_repair(tmp_path_factory):
+    root_dir = str(tmp_path_factory.mktemp('config_repair'))
+    context = DataContext.create(root_dir)
+    ge_dir = os.path.join(root_dir, context.GE_DIR)
+
+    # mangle the install
+    with open(os.path.join(context.root_directory, context.GE_YML), "r") as f:
+        raw_file = f.read()
+        config = yaml.load(raw_file)
+    config["datasources"]["foo"] = {
+        "class_name": "SqlAlchemyDatasource",
+        "data_asset_type": {
+            "class_name": "SqlAlchemyDataset"
+        },
+        "credentials": "${my_db_secrets}"
+    }
+
+    with open(os.path.join(context.root_directory, context.GE_YML), "w") as f:
+        yaml.dump(config, f)
+    with open(os.path.join(context.root_directory, context.GE_YML), "r") as f:
+        raw_file = f.read()
+        print(raw_file)
+    with pytest.raises(InvalidConfigError):
+        context = DataContext(ge_dir)
+
+    assert not DataContext.attempt_config_repair(ge_dir)
