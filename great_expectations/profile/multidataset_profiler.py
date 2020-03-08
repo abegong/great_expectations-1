@@ -106,30 +106,12 @@ class MultiDatasetProfiler(DataAssetProfiler):
     }
 
     def _create_expectation_from_bootstrapped_evr_list(self, expectation_type, original_kwargs, evr_list):
-    #     print(type(expectation_kwargs))
-    #     print(expectation_kwargs)
         modified_kwargs = copy.deepcopy(original_kwargs)
         changes_made = False
         
-    #     mapping_pattern_dict = evr_fields_by_expectation_type[expectation_type]
-        
-    #     if mapping_pattern_dict["pattern"] == "single_value_from_observed_value":
-    #         for evr in evr_list:
-    #             pass
-        
-        
-        
-    #     return ExpectationConfiguration(
-    #         expectation_type=expectation_type,
-    #         kwargs=modified_kwargs,
-    #     )
-
-    #     print(expectation_type)
         modified_kwargs = original_kwargs
 
         mapping_pattern_dict = self.evr_fields_by_expectation_type[expectation_type]
-
-    #     print(mapping_pattern_dict)
 
         if mapping_pattern_dict["pattern"] == "single_value":
             if mapping_pattern_dict["source_field"] == "observed_value":
@@ -155,8 +137,6 @@ class MultiDatasetProfiler(DataAssetProfiler):
             changes_made = True
 
         elif mapping_pattern_dict["pattern"] == "min_and_max_values":
-        #     print(evr_list[0])
-
             if mapping_pattern_dict["source_field"] == "observed_value":
                 values = [evr.result["observed_value"] for evr in evr_list]
             elif mapping_pattern_dict["source_field"] == "unexpected_percent":
@@ -187,7 +167,7 @@ class MultiDatasetProfiler(DataAssetProfiler):
 
         for base_expectation in initial_expectation_suite.expectations:
             grouped_results = []
-            for index, expectation_suite_validation_result in expectation_suite_validation_results.items():
+            for expectation_suite_validation_result in expectation_suite_validation_results:
                 counter = 0
                 for expectation_validation_result in expectation_suite_validation_result.results:
                     if base_expectation == expectation_validation_result.expectation_config:
@@ -223,30 +203,33 @@ class MultiDatasetProfiler(DataAssetProfiler):
         
         return modified_expectation_suite
 
-    def _generate_all_expectation_validation_results(self, initial_expectation_suite, dataset_list):
-        evrs = {}
+    def _generate_all_expectation_suite_validation_results(self, initial_expectation_suite, dataset_list):
+        expectation_suite_validation_results = []
         for index, dataset in enumerate(dataset_list):
-            evrs[index] = validate(dataset, initial_expectation_suite)
+            expectation_suite_validation_results.append(
+                validate(dataset, initial_expectation_suite)
+            )
         
-        return evrs
-
-    def _select_representative_dataset(self, dataset_list):
-        assert len(dataset_list) > 0
-
-        return dataset_list[0]
+        return expectation_suite_validation_results
 
     def _generate_initial_expectation_suite(self, dataset_list):
-        representative_dataset = self._select_representative_dataset(dataset_list)
+        """Create an initial ExpectationSuite by profiling the first dataset in the list
+
+        Note: this method is highly sensitive to the shape of the first dataset in the list.
+        """
+        assert len(dataset_list) > 0
+        representative_dataset = dataset_list[0]
 
         initial_expectation_suite, _ = BasicDatasetProfiler.profile(representative_dataset)
-
         return initial_expectation_suite
 
     def profile(self, dataset_list):
+        """Profile a list of datasets"""
+
         initial_expectation_suite = self._generate_initial_expectation_suite(
             dataset_list
         )
-        expectation_suite_validation_results = self._generate_all_expectation_validation_results(
+        expectation_suite_validation_results = self._generate_all_expectation_suite_validation_results(
             initial_expectation_suite,
             dataset_list
         )

@@ -35,20 +35,20 @@ def test_smoke_MultiDatasetProfiler():
             "y" : list("abcedf"),
             "z" : list("yynnny"),
         })),
-        # pd.DataFrame({
-        #     "x" : [0,1,2,3,4,5,6],
-        #     "y" : list("abcedfg"),
-        #     "z" : list("yynNNy"),
-        # }),
-        # pd.DataFrame({
+        ge.from_pandas(pd.DataFrame({
+            "x" : [0,1,2,3,4,5,6],
+            "y" : list("abcedfg"),
+            "z" : list("yynNNyn"),
+        })),
+        # ge.from_pandas(pd.DataFrame({
         #     "x" : [0,1,2,3,4,5],
         #     "y" : list("abcedf"),
-        # }),
-        # pd.DataFrame({
-        #     "x" : [-20,1,2,3,4,5,6],
-        #     "y" : list("abcedf"),
-        #     "z" : list("nnnnnn"),
-        # }),
+        # })),
+        ge.from_pandas(pd.DataFrame({
+            "x" : [-20,1,2,3,4,5,6],
+            "y" : list("abcedfg"),
+            "z" : list("nnnnnnn"),
+        })),
     ]
 
     my_profiler = MultiDatasetProfiler()
@@ -56,3 +56,6 @@ def test_smoke_MultiDatasetProfiler():
 
     assert isinstance(expectation_suite, ExpectationSuite)
     assert len(expectation_suite.expectations) > 0
+
+    # print(expectation_suite)
+    # assert False
