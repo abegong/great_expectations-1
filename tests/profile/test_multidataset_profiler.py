@@ -1,4 +1,16 @@
+import json
+
+import pandas as pd
+
+import great_expectations as ge
 from great_expectations.profile.multidataset_profiler import MultiDatasetProfiler
+from great_expectations.core import (
+    ExpectationSuite,
+    ExpectationSuiteValidationResult,
+    ExpectationValidationResult,
+    ExpectationConfiguration,
+    ExpectationKwargs,
+)
 
 def test_smoke_MultiDatasetProfiler():
     """This smoke test is a placeholder while MultiDatasetProfiler is in alpha.
@@ -7,4 +19,40 @@ def test_smoke_MultiDatasetProfiler():
     In the meantime, it illustrates usage and verifies that none of MultiDatasetProfiler's dependencies have broken.
     """
 
-    pass
+    test_datasets = [
+        ge.from_pandas(pd.DataFrame({
+            "x" : [0,1,2,3,4,5],
+            "y" : list("abcedf"),
+            "z" : list("yynnny"),
+        })),
+        ge.from_pandas(pd.DataFrame({
+            "x" : [0,1,2,3,4,5],
+            "y" : list("abcedf"),
+            "z" : list("yynnny"),
+        })),
+        ge.from_pandas(pd.DataFrame({
+            "x" : [0,1,2,3,4,5],
+            "y" : list("abcedf"),
+            "z" : list("yynnny"),
+        })),
+        # pd.DataFrame({
+        #     "x" : [0,1,2,3,4,5,6],
+        #     "y" : list("abcedfg"),
+        #     "z" : list("yynNNy"),
+        # }),
+        # pd.DataFrame({
+        #     "x" : [0,1,2,3,4,5],
+        #     "y" : list("abcedf"),
+        # }),
+        # pd.DataFrame({
+        #     "x" : [-20,1,2,3,4,5,6],
+        #     "y" : list("abcedf"),
+        #     "z" : list("nnnnnn"),
+        # }),
+    ]
+
+    my_profiler = MultiDatasetProfiler()
+    expectation_suite = my_profiler.profile(test_datasets)
+
+    assert isinstance(expectation_suite, ExpectationSuite)
+    assert len(expectation_suite.expectations) > 0
