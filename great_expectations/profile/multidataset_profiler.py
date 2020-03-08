@@ -27,104 +27,104 @@ class MultiDatasetProfiler(DataAssetProfiler):
     """
 
     # This dictionary defines profiling behavior for each expectation_type
-    # NOTE: many "skip"s in here.
+    # NOTE: many "skip_defining_expectation_kwargs"s in here.
     # NOTE: Not all expectations are covered here.
     evr_fields_by_expectation_type = {
         "expect_table_column_count_to_equal" : {
-            "method" : "single_value",
+            "method" : "define_expectation_kwargs_for_a_single_value",
             "kwargs" : {
                 "source_field" : "observed_value",
                 "target_field" : "value",
             }
         },
-        "expect_column_kl_divergence_to_be_less_than" : {"method": "skip", "kwargs": {}},
-        "expect_column_value_lengths_to_be_between" : {"method": "skip", "kwargs": {}},
+        "expect_column_kl_divergence_to_be_less_than" : {"method": "skip_defining_expectation_kwargs", "kwargs": {}},
+        "expect_column_value_lengths_to_be_between" : {"method": "skip_defining_expectation_kwargs", "kwargs": {}},
         "expect_table_row_count_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
-        "expect_table_columns_to_match_ordered_list" : {"method": "skip", "kwargs": {}},
-        "expect_column_values_to_be_in_type_list" : {"method": "skip", "kwargs": {}},
+        "expect_table_columns_to_match_ordered_list" : {"method": "skip_defining_expectation_kwargs", "kwargs": {}},
+        "expect_column_values_to_be_in_type_list" : {"method": "skip_defining_expectation_kwargs", "kwargs": {}},
         "expect_column_unique_value_count_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
         "expect_column_proportion_of_unique_values_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
         "expect_column_values_to_be_unique" : {
-            "method" : "single_value",
+            "method" : "define_expectation_kwargs_for_a_single_value",
             "kwargs" : {
                 "source_field" : "unexpected_percent",
                 "target_field" : "mostly",
             }
         },
         "expect_column_values_to_not_be_null" : {
-            "method" : "single_value",
+            "method" : "define_expectation_kwargs_for_a_single_value",
             "kwargs" : {
                 "source_field" : "unexpected_percent",
                 "target_field" : "mostly",
             }
         },
         "expect_column_values_to_be_in_set" : {
-            "method" : "single_value",
+            "method" : "define_expectation_kwargs_for_a_single_value",
             "kwargs" : {
                 "source_field" : "unexpected_percent",
                 "target_field" : "mostly",
             }
         },
         "expect_column_values_to_not_match_regex" : {
-            "method" : "single_value",
+            "method" : "define_expectation_kwargs_for_a_single_value",
             "kwargs" : {
                 "source_field" : "unexpected_percent",
                 "target_field" : "mostly",
             }
         },
         "expect_column_min_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
         "expect_column_max_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
         "expect_column_mean_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
         "expect_column_median_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
         "expect_column_stdev_to_be_between" : {
-            "method" : "min_and_max_values",
+            "method" : "define_expectation_kwargs_for_min_and_max_values",
             "kwargs" : {
                 "source_field" : "observed_value",
             }
         },
-        "expect_column_quantile_values_to_be_between" : {"method": "skip", "kwargs": {}},
-        "expect_column_distinct_values_to_be_in_set" : {"method": "skip", "kwargs": {}},
+        "expect_column_quantile_values_to_be_between" : {"method": "skip_defining_expectation_kwargs", "kwargs": {}},
+        "expect_column_distinct_values_to_be_in_set" : {"method": "skip_defining_expectation_kwargs", "kwargs": {}},
     }
 
-    def skip(self, expectation_validation_result_list, original_expectation_kwargs):
+    def skip_defining_expectation_kwargs(self, expectation_validation_result_list, original_expectation_kwargs):
         pass
 
-    def single_value(self, expectation_validation_result_list, original_expectation_kwargs, source_field, target_field, method="mode"):
+    def define_expectation_kwargs_for_a_single_value(self, expectation_validation_result_list, original_expectation_kwargs, source_field, target_field, method="mode"):
         modified_expectation_kwargs = copy.deepcopy(original_expectation_kwargs)
 
         value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
@@ -149,7 +149,7 @@ class MultiDatasetProfiler(DataAssetProfiler):
 
         return modified_expectation_kwargs
 
-    def min_and_max_values(self, expectation_validation_result_list, original_expectation_kwargs, source_field, method="min_and_max"):
+    def define_expectation_kwargs_for_min_and_max_values(self, expectation_validation_result_list, original_expectation_kwargs, source_field, method="min_and_max"):
         modified_expectation_kwargs = copy.deepcopy(original_expectation_kwargs)
         value_series = pd.Series([self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list])
 
