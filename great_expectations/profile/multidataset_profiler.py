@@ -26,6 +26,9 @@ class MultiDatasetProfiler(DataAssetProfiler):
     Instead, it's focused on the core logic of profiling.
     """
 
+    # This dictionary defines profiling behavior for each expectation_type
+    # TODO: Recast "pattern" to "method" and call an actual method
+    # TODO: Rename "punt" to "skip"
     evr_fields_by_expectation_type = {
         "expect_table_column_count_to_equal" : {
             "pattern" : "single_value",
@@ -105,21 +108,48 @@ class MultiDatasetProfiler(DataAssetProfiler):
         "expect_column_distinct_values_to_be_in_set" : {"pattern": "punt"},
     }
 
-    def _create_expectation_from_bootstrapped_evr_list(self, expectation_type, original_kwargs, evr_list):
+    def _skip(self):
+        pass
+
+    def _single_value(self, expectation_validation_result_list, source_field, target_field, method="mode"):
+        value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
+            
+        target_value = pd.Series(value_list).mode()[0]
+        
+        target_field = mapping_pattern_dict["target_field"]
+        if target_field == "mostly":
+            target_value = 1-target_value
+        
+            if target_value == 1.0:
+                if "mostly" in modified_kwargs:
+                    del(modified_kwargs["mostly"])
+            else:
+                modified_kwargs[target_field] = target_value
+        
+        else:
+            modified_kwargs[target_field] = target_value
+
+    def _min_and_max_values(self, expectation_validation_result_list, source_field, target_field, method="min_and_max"):
+        pass
+
+    def _extract_field_from_expectation_validation_result(self, expectation_validation_result, source_field):
+        # NOTE: Abe 2020/03/07 : Eventually, it may become necessary to make allow fetching of nested fields. For now, nope.
+        return expectation_validation_result.result[source_field]
+
+    def _create_expectation_from_grouped_expectation_validation_result_list(self, expectation_type, original_kwargs, expectation_validation_result_list):
+        """
+        This is where the main logic for multi-batch profiling lives.
+        """
         modified_kwargs = copy.deepcopy(original_kwargs)
         changes_made = False
         
-        modified_kwargs = original_kwargs
-
         mapping_pattern_dict = self.evr_fields_by_expectation_type[expectation_type]
 
         if mapping_pattern_dict["pattern"] == "single_value":
-            if mapping_pattern_dict["source_field"] == "observed_value":
-                values = [evr.result["observed_value"] for evr in evr_list]
-            elif mapping_pattern_dict["source_field"] == "unexpected_percent":
-                values = [evr.result["unexpected_percent"] for evr in evr_list]
+            source_field = mapping_pattern_dict["source_field"]
+            value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
                 
-            target_value = pd.Series(values).mode()[0]
+            target_value = pd.Series(value_list).mode()[0]
             
             target_field = mapping_pattern_dict["target_field"]
             if target_field == "mostly":
@@ -137,13 +167,11 @@ class MultiDatasetProfiler(DataAssetProfiler):
             changes_made = True
 
         elif mapping_pattern_dict["pattern"] == "min_and_max_values":
-            if mapping_pattern_dict["source_field"] == "observed_value":
-                values = [evr.result["observed_value"] for evr in evr_list]
-            elif mapping_pattern_dict["source_field"] == "unexpected_percent":
-                values = [evr.result["unexpected_percent"] for evr in evr_list]
+            source_field = mapping_pattern_dict["source_field"]
+            value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
 
-            modified_kwargs["min_value"] = pd.Series(values).min()
-            modified_kwargs["max_value"] = pd.Series(values).max()
+            modified_kwargs["min_value"] = pd.Series(value_list).min()
+            modified_kwargs["max_value"] = pd.Series(value_list).max()
             
             changes_made = True
 
@@ -160,39 +188,54 @@ class MultiDatasetProfiler(DataAssetProfiler):
             )
 
     def _create_grouped_expectation_validation_results(self, initial_expectation_suite, expectation_suite_validation_results):
-        """
+        """Create a grouped_expectation_validation_results object.
+
+        Note: This method is very adhoc. It should (eventually) be made compatible with MetricStores.
+        
+        Whether or not to use an actual MetricStore is an open question,
+        since this class isn't supposed to depend on DataContext and
+        MetricStores are a DataContext concern
         """
 
         grouped_expectation_validation_results = {}
 
         for base_expectation in initial_expectation_suite.expectations:
             grouped_results = []
+
             for expectation_suite_validation_result in expectation_suite_validation_results:
                 counter = 0
+                
                 for expectation_validation_result in expectation_suite_validation_result.results:
                     if base_expectation == expectation_validation_result.expectation_config:
                         counter += 1
                         grouped_results.append(expectation_validation_result)
 
                 assert counter == 1 # Because each ExpectationConfiguration should match exactly once in each ExpectationSuiteValidationResult
+
+                # TODO: This data structure is super awkward. Replace with something better---probably a MetricStore or proto-MetricStore
                 grouped_expectation_validation_results[(base_expectation.expectation_type, json.dumps(base_expectation.kwargs.to_json_dict()))] = grouped_results
         
         return grouped_expectation_validation_results
 
-    def _create_bootstrapped_expectation_suite(self, initial_expectation_suite, expectation_suite_validation_results):
+    def _create_modified_expectation_suite(self, initial_expectation_suite, expectation_suite_validation_results):
+        """
+        """
+
         grouped_evrs = self._create_grouped_expectation_validation_results(
             initial_expectation_suite,
             expectation_suite_validation_results,
         )
 
+        # TODO: make this name configurable
         modified_expectation_suite = ExpectationSuite(
             expectation_suite_name="mbatched-suite"
         )
 
+        # TODO: This data structure is super awkward. Replace with something better---probably a MetricStore or proto-MetricStore
         for (expectation_type, expectation_kwarg_string), evr_list in grouped_evrs.items():
             expectation_kwargs = json.loads(expectation_kwarg_string)
             
-            new_expectation = self._create_expectation_from_bootstrapped_evr_list(
+            new_expectation = self._create_expectation_from_grouped_expectation_validation_result_list(
                 expectation_type,
                 expectation_kwargs,
                 evr_list
@@ -204,7 +247,11 @@ class MultiDatasetProfiler(DataAssetProfiler):
         return modified_expectation_suite
 
     def _generate_all_expectation_suite_validation_results(self, initial_expectation_suite, dataset_list):
+        """Loop over datasets, validate, and store the results in an ordered list
+        """
+
         expectation_suite_validation_results = []
+
         for index, dataset in enumerate(dataset_list):
             expectation_suite_validation_results.append(
                 validate(dataset, initial_expectation_suite)
@@ -220,6 +267,9 @@ class MultiDatasetProfiler(DataAssetProfiler):
         assert len(dataset_list) > 0
         representative_dataset = dataset_list[0]
 
+        #TODO: make the base profiler configurable.
+        #TODO: add a create_vacuously_true_expectations parameter to BasicDatasetProfiler.profile
+        # For this call, we'd want to use False.
         initial_expectation_suite, _ = BasicDatasetProfiler.profile(representative_dataset)
         return initial_expectation_suite
 
@@ -233,7 +283,7 @@ class MultiDatasetProfiler(DataAssetProfiler):
             initial_expectation_suite,
             dataset_list
         )
-        modified_expectation_suite = self._create_bootstrapped_expectation_suite(
+        modified_expectation_suite = self._create_modified_expectation_suite(
             initial_expectation_suite,
             expectation_suite_validation_results,
         )
