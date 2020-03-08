@@ -27,164 +27,161 @@ class MultiDatasetProfiler(DataAssetProfiler):
     """
 
     # This dictionary defines profiling behavior for each expectation_type
-    # TODO: Recast "pattern" to "method" and call an actual method
-    # TODO: Rename "punt" to "skip"
+    # NOTE: many "skip"s in here.
+    # NOTE: Not all expectations are covered here.
     evr_fields_by_expectation_type = {
         "expect_table_column_count_to_equal" : {
-            "pattern" : "single_value",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "single_value",
+            "kwargs" : {
+                "source_field" : "observed_value",
+                "target_field" : "value",
+            }
         },
-        "expect_column_kl_divergence_to_be_less_than" : {"pattern": "punt"},
-        "expect_column_value_lengths_to_be_between" : {"pattern": "punt"},
-    #     {
-    #         "pattern" : "min_and_max_values",
-    #         "source_field" : "unexpected_count",
-    #         "target_field" : "value",
-    #     },
+        "expect_column_kl_divergence_to_be_less_than" : {"method": "skip", "kwargs": {}},
+        "expect_column_value_lengths_to_be_between" : {"method": "skip", "kwargs": {}},
         "expect_table_row_count_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
-        "expect_table_columns_to_match_ordered_list" : {"pattern": "punt"},
-        "expect_column_values_to_be_in_type_list" : {"pattern": "punt"},
+        "expect_table_columns_to_match_ordered_list" : {"method": "skip", "kwargs": {}},
+        "expect_column_values_to_be_in_type_list" : {"method": "skip", "kwargs": {}},
         "expect_column_unique_value_count_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
         "expect_column_proportion_of_unique_values_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
         "expect_column_values_to_be_unique" : {
-            "pattern" : "single_value",
-            "source_field" : "unexpected_percent",
-            "target_field" : "mostly",
+            "method" : "single_value",
+            "kwargs" : {
+                "source_field" : "unexpected_percent",
+                "target_field" : "mostly",
+            }
         },
         "expect_column_values_to_not_be_null" : {
-            "pattern" : "single_value",
-            "source_field" : "unexpected_percent",
-            "target_field" : "mostly",
+            "method" : "single_value",
+            "kwargs" : {
+                "source_field" : "unexpected_percent",
+                "target_field" : "mostly",
+            }
         },
         "expect_column_values_to_be_in_set" : {
-            "pattern" : "single_value",
-            "source_field" : "unexpected_percent",
-            "target_field" : "mostly",
+            "method" : "single_value",
+            "kwargs" : {
+                "source_field" : "unexpected_percent",
+                "target_field" : "mostly",
+            }
         },
         "expect_column_values_to_not_match_regex" : {
-            "pattern" : "single_value",
-            "source_field" : "unexpected_percent",
-            "target_field" : "mostly",
+            "method" : "single_value",
+            "kwargs" : {
+                "source_field" : "unexpected_percent",
+                "target_field" : "mostly",
+            }
         },
         "expect_column_min_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
         "expect_column_max_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
         "expect_column_mean_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
         "expect_column_median_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
         "expect_column_stdev_to_be_between" : {
-            "pattern" : "min_and_max_values",
-            "source_field" : "observed_value",
-            "target_field" : "value",
+            "method" : "min_and_max_values",
+            "kwargs" : {
+                "source_field" : "observed_value",
+            }
         },
-        "expect_column_quantile_values_to_be_between" : {"pattern": "punt"},
-        "expect_column_distinct_values_to_be_in_set" : {"pattern": "punt"},
+        "expect_column_quantile_values_to_be_between" : {"method": "skip", "kwargs": {}},
+        "expect_column_distinct_values_to_be_in_set" : {"method": "skip", "kwargs": {}},
     }
 
-    def _skip(self):
+    def skip(self, expectation_validation_result_list, original_expectation_kwargs):
         pass
 
-    def _single_value(self, expectation_validation_result_list, source_field, target_field, method="mode"):
+    def single_value(self, expectation_validation_result_list, original_expectation_kwargs, source_field, target_field, method="mode"):
+        modified_expectation_kwargs = copy.deepcopy(original_expectation_kwargs)
+
         value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
-            
-        target_value = pd.Series(value_list).mode()[0]
+
+        if method == "mode":
+            target_value = pd.Series(value_list).mode()[0]
+        else:
+            raise ValueError("Unknown method: "+method)
         
-        target_field = mapping_pattern_dict["target_field"]
+        target_field = target_field
         if target_field == "mostly":
             target_value = 1-target_value
         
             if target_value == 1.0:
-                if "mostly" in modified_kwargs:
-                    del(modified_kwargs["mostly"])
+                if "mostly" in modified_expectation_kwargs:
+                    del(modified_expectation_kwargs["mostly"])
             else:
-                modified_kwargs[target_field] = target_value
+                modified_expectation_kwargs[target_field] = target_value
         
         else:
-            modified_kwargs[target_field] = target_value
+            modified_expectation_kwargs[target_field] = target_value
 
-    def _min_and_max_values(self, expectation_validation_result_list, source_field, target_field, method="min_and_max"):
-        pass
+        return modified_expectation_kwargs
+
+    def min_and_max_values(self, expectation_validation_result_list, original_expectation_kwargs, source_field, method="min_and_max"):
+        modified_expectation_kwargs = copy.deepcopy(original_expectation_kwargs)
+        value_series = pd.Series([self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list])
+
+        if method == "min_and_max":
+            modified_expectation_kwargs["min_value"] = value_series.min()
+            modified_expectation_kwargs["max_value"] = value_series.max()
+        else:
+            raise ValueError("Unknown method: "+method)
+        
+        return modified_expectation_kwargs
 
     def _extract_field_from_expectation_validation_result(self, expectation_validation_result, source_field):
         # NOTE: Abe 2020/03/07 : Eventually, it may become necessary to make allow fetching of nested fields. For now, nope.
         return expectation_validation_result.result[source_field]
 
-    def _create_expectation_from_grouped_expectation_validation_result_list(self, expectation_type, original_kwargs, expectation_validation_result_list):
+    def _create_expectation_from_grouped_expectation_validation_result_list(self, expectation_type, original_expectation_kwargs, expectation_validation_result_list):
         """
         This is where the main logic for multi-batch profiling lives.
         """
-        modified_kwargs = copy.deepcopy(original_kwargs)
-        changes_made = False
         
         mapping_pattern_dict = self.evr_fields_by_expectation_type[expectation_type]
+        generation_method = getattr(self, mapping_pattern_dict["method"])
+        modified_expectation_kwargs = generation_method(
+            expectation_validation_result_list,
+            original_expectation_kwargs,
+            **mapping_pattern_dict["kwargs"]
+        )
 
-        if mapping_pattern_dict["pattern"] == "single_value":
-            source_field = mapping_pattern_dict["source_field"]
-            value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
-                
-            target_value = pd.Series(value_list).mode()[0]
-            
-            target_field = mapping_pattern_dict["target_field"]
-            if target_field == "mostly":
-                target_value = 1-target_value
-            
-                if target_value == 1.0:
-                    if "mostly" in modified_kwargs:
-                        del(modified_kwargs["mostly"])
-                else:
-                    modified_kwargs[target_field] = target_value
-            
-            else:
-                modified_kwargs[target_field] = target_value
-            
-            changes_made = True
-
-        elif mapping_pattern_dict["pattern"] == "min_and_max_values":
-            source_field = mapping_pattern_dict["source_field"]
-            value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
-
-            modified_kwargs["min_value"] = pd.Series(value_list).min()
-            modified_kwargs["max_value"] = pd.Series(value_list).max()
-            
-            changes_made = True
-
-        elif mapping_pattern_dict["pattern"] == "punt":
-            pass
-
-        else:
-            raise ValueError("Unknown pattern: " + mapping_pattern_dict["pattern"])
-
-        if changes_made:      
+        if modified_expectation_kwargs != None:      
             return ExpectationConfiguration(
                 expectation_type=expectation_type,
-                kwargs=modified_kwargs,
+                kwargs=modified_expectation_kwargs,
             )
 
     def _create_grouped_expectation_validation_results(self, initial_expectation_suite, expectation_suite_validation_results):

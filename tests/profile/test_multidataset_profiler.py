@@ -56,6 +56,19 @@ def test_smoke_MultiDatasetProfiler():
 
     assert isinstance(expectation_suite, ExpectationSuite)
     assert len(expectation_suite.expectations) > 0
+    expectation_types = set([expectation.expectation_type for expectation in expectation_suite.expectations])
+    print(expectation_types)
+    for expectation_type in [
+        'expect_column_proportion_of_unique_values_to_be_between',
+        'expect_table_row_count_to_be_between',
+        'expect_column_values_to_not_be_null',
+        'expect_column_values_to_be_in_set',
+        'expect_column_values_to_not_match_regex',
+        'expect_column_unique_value_count_to_be_between',
+        'expect_column_values_to_be_unique',
+    ]:
+        assert expectation_type in expectation_types
+
 
     # print(expectation_suite)
     # assert False
