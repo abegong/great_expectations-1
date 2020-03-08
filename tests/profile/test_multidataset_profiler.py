@@ -3,6 +3,8 @@ import json
 import pandas as pd
 
 import great_expectations as ge
+from great_expectations.data_context.util import file_relative_path
+from great_expectations.data_context.util import safe_mmkdir
 from great_expectations.profile.multidataset_profiler import MultiDatasetProfiler
 from great_expectations.core import (
     ExpectationSuite,
@@ -72,3 +74,18 @@ def test_smoke_MultiDatasetProfiler():
 
     # print(expectation_suite)
     # assert False
+
+    # ??? : Is this the right place for this line:
+    safe_mmkdir(file_relative_path(__file__, './output'))
+    with open(file_relative_path(__file__, './output/test_smoke_MultiDatasetProfiler.json'), 'wb') as f:
+        f.write(json.dumps(expectation_suite.to_json_dict()).encode("utf-8"))
+
+    from great_expectations.render.renderer import ExpectationSuitePageRenderer
+    from great_expectations.render.view import DefaultJinjaPageView
+
+    espr = ExpectationSuitePageRenderer()
+    rdc = espr.render(expectations=expectation_suite)
+    html = DefaultJinjaPageView().render(rdc)
+
+    with open(file_relative_path(__file__, './output/test_smoke_MultiDatasetProfiler.html'), 'wb') as f:
+        f.write(html.encode("utf-8"))

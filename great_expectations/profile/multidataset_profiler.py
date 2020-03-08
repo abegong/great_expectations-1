@@ -187,7 +187,8 @@ class MultiDatasetProfiler(DataAssetProfiler):
     def _create_grouped_expectation_validation_results(self, initial_expectation_suite, expectation_suite_validation_results):
         """Create a grouped_expectation_validation_results object.
 
-        Note: This method is very adhoc. It should (eventually) be made compatible with MetricStores.
+        Note: This method is very ad hoc.
+        It should (eventually) be made compatible with MetricStores.
         
         Whether or not to use an actual MetricStore is an open question,
         since this class isn't supposed to depend on DataContext and
@@ -215,7 +216,7 @@ class MultiDatasetProfiler(DataAssetProfiler):
         return grouped_expectation_validation_results
 
     def _create_modified_expectation_suite(self, initial_expectation_suite, expectation_suite_validation_results):
-        """
+        """Create an ExpectationSuite that contains real guesses for ExpectationKwargs.
         """
 
         grouped_evrs = self._create_grouped_expectation_validation_results(

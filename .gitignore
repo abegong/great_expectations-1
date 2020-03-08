@@ -7,6 +7,9 @@ tests/render/output/*
 # DataContext test output
 tests/data_context/output/*
 
+# Profiling test output
+tests/profile/output/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
