@@ -124,19 +124,36 @@ class MultiDatasetProfiler(DataAssetProfiler):
     def skip_defining_expectation_kwargs(self, expectation_validation_result_list, original_expectation_kwargs):
         pass
 
-    def define_expectation_kwargs_for_a_single_value(self, expectation_validation_result_list, original_expectation_kwargs, source_field, target_field, method="mode"):
+    def define_expectation_kwargs_for_a_single_value(self,
+        expectation_validation_result_list,
+        original_expectation_kwargs,
+        source_field,
+        target_field,
+        method="mean"
+    ):
         modified_expectation_kwargs = copy.deepcopy(original_expectation_kwargs)
 
-        value_list = [self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list]
+        value_series = pd.Series([self._extract_field_from_expectation_validation_result(evr, source_field) for evr in expectation_validation_result_list])
 
         if method == "mode":
-            target_value = pd.Series(value_list).mode()[0]
+            target_value = value_series.mode()[0]
+        elif method == "mean":
+            target_value = value_series.mean()
         else:
             raise ValueError("Unknown method: "+method)
         
-        target_field = target_field
         if target_field == "mostly":
-            target_value = 1-target_value
+            print(
+                expectation_validation_result_list[0].expectation_config.expectation_type,
+                expectation_validation_result_list[0].expectation_config.kwargs["column"],
+                source_field,
+                target_field,
+                target_value,
+                list(value_series)
+            )
+            if source_field == "unexpected_percent":
+                target_value /= 100.
+            target_value = 1-target_value#*1./100.
         
             if target_value == 1.0:
                 if "mostly" in modified_expectation_kwargs:

@@ -42,6 +42,11 @@ def test_smoke_MultiDatasetProfiler():
             "y" : list("abcedfg"),
             "z" : list("yynNNyn"),
         })),
+        ge.from_pandas(pd.DataFrame({
+            "x" : [0,1,2,3,4,None,None],
+            "y" : list("abcedfg"),
+            "z" : list("yynNNyn"),
+        })),
         # ge.from_pandas(pd.DataFrame({
         #     "x" : [0,1,2,3,4,5],
         #     "y" : list("abcedf"),
@@ -59,7 +64,7 @@ def test_smoke_MultiDatasetProfiler():
     assert isinstance(expectation_suite, ExpectationSuite)
     assert len(expectation_suite.expectations) > 0
     expectation_types = set([expectation.expectation_type for expectation in expectation_suite.expectations])
-    print(expectation_types)
+    # print(expectation_types)
     for expectation_type in [
         'expect_column_proportion_of_unique_values_to_be_between',
         'expect_table_row_count_to_be_between',
@@ -70,10 +75,6 @@ def test_smoke_MultiDatasetProfiler():
         'expect_column_values_to_be_unique',
     ]:
         assert expectation_type in expectation_types
-
-
-    # print(expectation_suite)
-    # assert False
 
     # ??? : Is this the right place for this line:
     safe_mmkdir(file_relative_path(__file__, './output'))
@@ -89,3 +90,6 @@ def test_smoke_MultiDatasetProfiler():
 
     with open(file_relative_path(__file__, './output/test_smoke_MultiDatasetProfiler.html'), 'wb') as f:
         f.write(html.encode("utf-8"))
+
+    # print(expectation_suite)
+    # assert False
