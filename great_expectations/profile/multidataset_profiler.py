@@ -121,6 +121,13 @@ class MultiDatasetProfiler(DataAssetProfiler):
         "expect_column_distinct_values_to_be_in_set" : {"method": "skip_defining_expectation_kwargs", "kwargs": {}},
     }
 
+    def __init__(
+        self,
+        column_whitelist=None
+    ):
+        self.column_whitelist = column_whitelist
+
+
     def skip_defining_expectation_kwargs(self, expectation_validation_result_list, original_expectation_kwargs):
         pass
 
@@ -241,6 +248,10 @@ class MultiDatasetProfiler(DataAssetProfiler):
         # TODO: This data structure is super awkward. Replace with something better---probably a MetricStore or proto-MetricStore
         for (expectation_type, expectation_kwarg_string), evr_list in grouped_evrs.items():
             expectation_kwargs = json.loads(expectation_kwarg_string)
+
+            if self.column_whitelist != None:
+                if "column" in expectation_kwargs and expectation_kwargs["column"] not in self.column_whitelist:
+                    continue
             
             new_expectation = self._create_expectation_from_grouped_expectation_validation_result_list(
                 expectation_type,

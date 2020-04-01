@@ -14,49 +14,50 @@ from great_expectations.core import (
     ExpectationKwargs,
 )
 
-def test_smoke_MultiDatasetProfiler():
+#TODO: turn this into a proper fixture
+test_datasets = [
+    ge.from_pandas(pd.DataFrame({
+        "x" : [0,1,2,3,4,5],
+        "y" : list("abcedf"),
+        "z" : list("yynnny"),
+    })),
+    ge.from_pandas(pd.DataFrame({
+        "x" : [0,1,2,3,4,5],
+        "y" : list("abcedf"),
+        "z" : list("yynnny"),
+    })),
+    ge.from_pandas(pd.DataFrame({
+        "x" : [0,1,2,3,4,5],
+        "y" : list("abcedf"),
+        "z" : list("yynnny"),
+    })),
+    ge.from_pandas(pd.DataFrame({
+        "x" : [0,1,2,3,4,5,6],
+        "y" : list("abcedfg"),
+        "z" : list("yynNNyn"),
+    })),
+    ge.from_pandas(pd.DataFrame({
+        "x" : [0,1,2,3,4,None,None],
+        "y" : list("abcedfg"),
+        "z" : list("yynNNyn"),
+    })),
+    # ge.from_pandas(pd.DataFrame({
+    #     "x" : [0,1,2,3,4,5],
+    #     "y" : list("abcedf"),
+    # })),
+    ge.from_pandas(pd.DataFrame({
+        "x" : [-20,1,2,3,4,5,6],
+        "y" : list("abcedfg"),
+        "z" : list("nnnnnnn"),
+    })),
+]
+
+def test_smoke_MultiDatasetProfiler(test_datasets=test_datasets):
     """This smoke test is a placeholder while MultiDatasetProfiler is in alpha.
 
     It will eventually be replaced with true unit tests, and the smoke test will be moved into an intergration test framework.
     In the meantime, it illustrates usage and verifies that none of MultiDatasetProfiler's dependencies have broken.
     """
-
-    test_datasets = [
-        ge.from_pandas(pd.DataFrame({
-            "x" : [0,1,2,3,4,5],
-            "y" : list("abcedf"),
-            "z" : list("yynnny"),
-        })),
-        ge.from_pandas(pd.DataFrame({
-            "x" : [0,1,2,3,4,5],
-            "y" : list("abcedf"),
-            "z" : list("yynnny"),
-        })),
-        ge.from_pandas(pd.DataFrame({
-            "x" : [0,1,2,3,4,5],
-            "y" : list("abcedf"),
-            "z" : list("yynnny"),
-        })),
-        ge.from_pandas(pd.DataFrame({
-            "x" : [0,1,2,3,4,5,6],
-            "y" : list("abcedfg"),
-            "z" : list("yynNNyn"),
-        })),
-        ge.from_pandas(pd.DataFrame({
-            "x" : [0,1,2,3,4,None,None],
-            "y" : list("abcedfg"),
-            "z" : list("yynNNyn"),
-        })),
-        # ge.from_pandas(pd.DataFrame({
-        #     "x" : [0,1,2,3,4,5],
-        #     "y" : list("abcedf"),
-        # })),
-        ge.from_pandas(pd.DataFrame({
-            "x" : [-20,1,2,3,4,5,6],
-            "y" : list("abcedfg"),
-            "z" : list("nnnnnnn"),
-        })),
-    ]
 
     my_profiler = MultiDatasetProfiler()
     expectation_suite = my_profiler.profile(test_datasets)
@@ -93,3 +94,20 @@ def test_smoke_MultiDatasetProfiler():
 
     # print(expectation_suite)
     # assert False
+
+
+def test_MultiDatasetProfiler_column_whitelist(test_datasets=test_datasets):
+    """This smoke test is a placeholder while MultiDatasetProfiler is in alpha.
+
+    It will eventually be replaced with true unit tests, and the smoke test will be moved into an intergration test framework.
+    In the meantime, it illustrates usage and verifies that none of MultiDatasetProfiler's dependencies have broken.
+    """
+
+    my_profiler = MultiDatasetProfiler(
+        column_whitelist=["x"]
+    )
+    expectation_suite = my_profiler.profile(test_datasets)
+    print(expectation_suite.to_json_dict())
+    for exp in expectation_suite.expectations:
+        if "column" in exp["kwargs"]:
+            assert exp["kwargs"]["column"] == "x"
