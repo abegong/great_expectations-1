@@ -143,14 +143,6 @@ class MultiDatasetProfiler(DataAssetProfiler):
             raise ValueError("Unknown method: "+method)
         
         if target_field == "mostly":
-            print(
-                expectation_validation_result_list[0].expectation_config.expectation_type,
-                expectation_validation_result_list[0].expectation_config.kwargs["column"],
-                source_field,
-                target_field,
-                target_value,
-                list(value_series)
-            )
             if source_field == "unexpected_percent":
                 target_value /= 100.
             target_value = 1-target_value#*1./100.
