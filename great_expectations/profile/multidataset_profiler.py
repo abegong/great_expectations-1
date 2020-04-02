@@ -74,11 +74,8 @@ class MultiDatasetProfiler(DataAssetProfiler):
             }
         },
         "expect_column_values_to_be_in_set" : {
-            "method" : "define_expectation_kwargs_for_a_single_value",
-            "kwargs" : {
-                "source_field" : "unexpected_percent",
-                "target_field" : "mostly",
-            }
+            "method" : "define_expectation_kwargs_for_expect_column_values_to_be_in_set",
+            "kwargs" : {}
         },
         "expect_column_values_to_not_match_regex" : {
             "method" : "define_expectation_kwargs_for_a_single_value",
@@ -182,6 +179,21 @@ class MultiDatasetProfiler(DataAssetProfiler):
         else:
             raise ValueError("Unknown method: "+method)
         
+        return modified_expectation_kwargs
+
+    def define_expectation_kwargs_for_expect_column_values_to_be_in_set(self, expectation_validation_result_list, original_expectation_kwargs):
+        # modified_expectation_kwargs = self.define_expectation_kwargs_for_a_single_value(
+        #     expectation_validation_result_list,
+        #     original_expectation_kwargs,
+        #     source_field="unexpected_percent",
+        #     target_field="mostly",
+        # )
+        modified_expectation_kwargs = copy.deepcopy(original_expectation_kwargs)
+
+        # print(expectation_validation_result_list)
+        value_set = set([value for evr in expectation_validation_result_list for value in evr.result["partial_unexpected_list"]])
+        modified_expectation_kwargs["value_set"] = list(value_set)
+
         return modified_expectation_kwargs
 
     ### Core methods ###

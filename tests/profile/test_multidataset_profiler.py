@@ -146,3 +146,31 @@ def test_MultiDatasetProfiler_validation_result_store(test_datasets=test_dataset
 
     assert len(my_fake_store) > 0
 
+def test_define_expectation_kwargs_for_expect_column_values_to_be_in_set(test_datasets=test_datasets):
+    # my_fake_store = []
+    # my_profiler = MultiDatasetProfiler(
+    #     validation_result_store=my_fake_store
+    # )
+    # _ = my_profiler.profile(test_datasets)
+    # print(my_fake_store[0])
+    expectation_config = {
+        "expectation_type": "expect_column_values_to_be_in_set",
+        "kwargs" : {
+            "column" : "z",
+            "value_set": []
+        }
+    }
+    expectation_validation_result_list = [dataset.expect_column_values_to_be_in_set(column="z", value_set=[]) for dataset in test_datasets]
+
+    my_profiler = MultiDatasetProfiler()
+    modified_expectation_kwargs = my_profiler.define_expectation_kwargs_for_expect_column_values_to_be_in_set(
+        expectation_validation_result_list,
+        {
+            "column" : "z",
+            "value_set": []
+        }
+    )
+
+    print(modified_expectation_kwargs)
+    assert modified_expectation_kwargs["column"] == "z"
+    assert set(modified_expectation_kwargs["value_set"]) == set(["y", "N", "n"])
