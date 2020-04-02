@@ -126,11 +126,14 @@ class MultiDatasetProfiler(DataAssetProfiler):
         column_whitelist=None,
         expectation_whitelist=None,
         expectation_blacklist=None,
+        validation_result_store=None,
     ):
         self.column_whitelist = column_whitelist
         self.expectation_whitelist = expectation_whitelist
         self.expectation_blacklist = expectation_blacklist
+        self.validation_result_store = validation_result_store
 
+    ### Methods for extracting values from an expectation_validation_result_list ###
 
     def skip_defining_expectation_kwargs(self, expectation_validation_result_list, original_expectation_kwargs):
         pass
@@ -180,6 +183,8 @@ class MultiDatasetProfiler(DataAssetProfiler):
             raise ValueError("Unknown method: "+method)
         
         return modified_expectation_kwargs
+
+    ### Core methods ###
 
     def _extract_field_from_expectation_validation_result(self, expectation_validation_result, source_field):
         # NOTE: Abe 2020/03/07 : Eventually, it may become necessary to make allow fetching of nested fields. For now, nope.
@@ -283,9 +288,12 @@ class MultiDatasetProfiler(DataAssetProfiler):
         expectation_suite_validation_results = []
 
         for index, dataset in enumerate(dataset_list):
-            expectation_suite_validation_results.append(
-                validate(dataset, initial_expectation_suite)
-            )
+            validation_result = validate(dataset, initial_expectation_suite)
+
+            expectation_suite_validation_results.append(validation_result)
+
+            if self.validation_result_store != None:
+                self.validation_result_store.append(validation_result)
         
         return expectation_suite_validation_results
 

@@ -130,8 +130,19 @@ def test_MultiDatasetProfiler_expectation_blacklist(test_datasets=test_datasets)
     expectation_suite = my_profiler.profile(test_datasets)
     expectation_types = set([exp["expectation_type"] for exp in expectation_suite.expectations])
 
+    #This is kind of a weak test.
     assert "expect_column_values_to_not_be_null" not in expectation_types
-    # assert exp["expectation_type"] in [
-    #     'expect_column_values_to_not_be_null',
-    #     'expect_column_values_to_not_match_regex',
-    # ]
+
+
+def test_MultiDatasetProfiler_validation_result_store(test_datasets=test_datasets):
+    #FIXME: This doesn't use a real store. It uses a list.
+    my_fake_store = []
+
+    assert len(my_fake_store) == 0
+    my_profiler = MultiDatasetProfiler(
+        validation_result_store=my_fake_store
+    )
+    _ = my_profiler.profile(test_datasets)
+
+    assert len(my_fake_store) > 0
+
