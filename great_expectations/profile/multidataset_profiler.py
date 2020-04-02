@@ -125,9 +125,11 @@ class MultiDatasetProfiler(DataAssetProfiler):
         self,
         column_whitelist=None,
         expectation_whitelist=None,
+        expectation_blacklist=None,
     ):
         self.column_whitelist = column_whitelist
         self.expectation_whitelist = expectation_whitelist
+        self.expectation_blacklist = expectation_blacklist
 
 
     def skip_defining_expectation_kwargs(self, expectation_validation_result_list, original_expectation_kwargs):
@@ -258,7 +260,11 @@ class MultiDatasetProfiler(DataAssetProfiler):
             if self.expectation_whitelist != None:
                 if expectation_type not in self.expectation_whitelist:
                     continue
-            
+
+            if self.expectation_blacklist != None:
+                if expectation_type in self.expectation_blacklist:
+                    continue
+
             new_expectation = self._create_expectation_from_grouped_expectation_validation_result_list(
                 expectation_type,
                 expectation_kwargs,

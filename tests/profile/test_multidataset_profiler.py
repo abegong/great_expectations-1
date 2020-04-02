@@ -120,3 +120,18 @@ def test_MultiDatasetProfiler_expectation_whitelist(test_datasets=test_datasets)
             'expect_column_values_to_not_be_null',
             'expect_column_values_to_not_match_regex',
         ]
+
+def test_MultiDatasetProfiler_expectation_blacklist(test_datasets=test_datasets):
+    my_profiler = MultiDatasetProfiler(
+        expectation_blacklist=[
+            'expect_column_values_to_not_be_null',
+        ]
+    )
+    expectation_suite = my_profiler.profile(test_datasets)
+    expectation_types = set([exp["expectation_type"] for exp in expectation_suite.expectations])
+
+    assert "expect_column_values_to_not_be_null" not in expectation_types
+    # assert exp["expectation_type"] in [
+    #     'expect_column_values_to_not_be_null',
+    #     'expect_column_values_to_not_match_regex',
+    # ]
