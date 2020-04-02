@@ -613,6 +613,13 @@ class DataAsset(object):
                 else:
                     return expectation
 
+    # FIXME: This is slapped together and untested.
+    # It might really be this simple, but needs a sanity check.
+    def replace_expectation_suite(self, new_expectation_suite):
+        assert type(new_expectation_suite) == ExpectationSuite
+
+        self._expectation_suite = new_expectation_suite
+
     def set_config_value(self, key, value):
         self._config[key] = value
 
