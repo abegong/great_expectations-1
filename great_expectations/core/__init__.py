@@ -847,6 +847,15 @@ class ExpectationSuiteValidationResult(DictDot):
         raise UnavailableMetricError("Metric {} with metric_kwargs_id {} is not available.".format(metric_name,
                                                                                                    metric_kwargs_id))
 
+    def get_failed_results(self):
+        failed_expectation_validation_results = []
+        
+        for expectation_validation_result in self.results:
+            if expectation_validation_result.success == False:
+                failed_expectation_validation_results.append(expectation_validation_result)
+        
+        return failed_expectation_validation_results
+
 
 class ExpectationSuiteValidationResultSchema(Schema):
     success = fields.Bool()
