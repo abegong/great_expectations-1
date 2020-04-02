@@ -97,17 +97,26 @@ def test_smoke_MultiDatasetProfiler(test_datasets=test_datasets):
 
 
 def test_MultiDatasetProfiler_column_whitelist(test_datasets=test_datasets):
-    """This smoke test is a placeholder while MultiDatasetProfiler is in alpha.
-
-    It will eventually be replaced with true unit tests, and the smoke test will be moved into an intergration test framework.
-    In the meantime, it illustrates usage and verifies that none of MultiDatasetProfiler's dependencies have broken.
-    """
-
     my_profiler = MultiDatasetProfiler(
         column_whitelist=["x"]
     )
     expectation_suite = my_profiler.profile(test_datasets)
-    print(expectation_suite.to_json_dict())
+
     for exp in expectation_suite.expectations:
         if "column" in exp["kwargs"]:
             assert exp["kwargs"]["column"] == "x"
+
+
+def test_MultiDatasetProfiler_expectation_whitelist(test_datasets=test_datasets):
+    my_profiler = MultiDatasetProfiler(
+        expectation_whitelist=[
+            'expect_column_values_to_not_be_null',
+            'expect_column_values_to_not_match_regex',
+        ]
+    )
+    expectation_suite = my_profiler.profile(test_datasets)
+    for exp in expectation_suite.expectations:
+        assert exp["expectation_type"] in [
+            'expect_column_values_to_not_be_null',
+            'expect_column_values_to_not_match_regex',
+        ]
