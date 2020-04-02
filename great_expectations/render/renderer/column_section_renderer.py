@@ -663,6 +663,65 @@ class ValidationResultsColumnSectionRenderer(ColumnSectionRenderer):
             "content_blocks": content_blocks
         })
 
+class ValidationResultsSectionRenderer(ColumnSectionRenderer):
+    """Renders a table of validation results, not necessarily from a single column"""
+
+    def __init__(self, table_renderer=None):
+        if table_renderer is None:
+            table_renderer = {
+                "class_name": "ValidationResultsTableContentBlockRenderer"
+            }
+        self._table_renderer = load_class(
+            class_name=table_renderer.get("class_name"),
+            module_name=table_renderer.get("module_name", "great_expectations.render.renderer.content_block")
+        )
+
+    # @classmethod
+    # def _render_header(cls, validation_results):
+    #     column = cls._get_column_name(validation_results)
+
+    #     new_block = RenderedHeaderContent(**{
+    #         "header": RenderedStringTemplateContent(**{
+    #             "content_block_type": "string_template",
+    #             "string_template": {
+    #                 "template": convert_to_string_and_escape(column),
+    #                 "tag": "h5",
+    #                 "styling": {
+    #                     "classes": ["m-0"]
+    #                 }
+    #             }
+    #         }),
+    #         "styling": {
+    #             "classes": ["col-12", "p-0"],
+    #             "header": {
+    #                 "classes": ["alert", "alert-secondary"]
+    #             }
+    #         }
+    #     })
+
+    #     return validation_results, new_block
+
+    def _render_table(self, validation_results):
+        new_block = self._table_renderer.render(
+            validation_results,
+            include_column_name=True
+        )
+
+        return [], new_block
+
+    def render(self, validation_results):
+        column = self._get_column_name(validation_results)
+        content_blocks = []
+        # remaining_evrs, content_block = self._render_header(validation_results)
+        # content_blocks.append(content_block)
+        remaining_evrs, content_block = self._render_table(validation_results)
+        content_blocks.append(content_block)
+
+        return RenderedSectionContent(**{
+            "section_name": column,
+            "content_blocks": content_blocks
+        })
+
 
 class ExpectationSuiteColumnSectionRenderer(ColumnSectionRenderer):
 

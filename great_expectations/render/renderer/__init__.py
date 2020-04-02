@@ -1,6 +1,7 @@
 from .column_section_renderer import (
     ProfilingResultsColumnSectionRenderer,
     ValidationResultsColumnSectionRenderer,
+    ValidationResultsSectionRenderer,
     ExpectationSuiteColumnSectionRenderer,
 )
 

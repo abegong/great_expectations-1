@@ -13,6 +13,7 @@ from great_expectations.render.renderer import (
     ExpectationSuiteColumnSectionRenderer,
     ProfilingResultsColumnSectionRenderer,
     ValidationResultsColumnSectionRenderer,
+    ValidationResultsSectionRenderer,
 )
 from great_expectations.render.types import RenderedSectionContent
 from great_expectations.render.view import DefaultJinjaSectionView
@@ -239,7 +240,7 @@ cooltip_style_element = """<style type="text/css">
 </style>
 """
 
-
+#NOTE: all of these display* methods are pretty similar. A refactor to consolidate code would be a good idea.
 def display_column_expectations_as_section(
     expectation_suite,
     column,
@@ -274,7 +275,7 @@ def display_column_expectations_as_section(
     else:
         display(HTML(html_to_display))
 
-
+#NOTE: all of these display* methods are pretty similar. A refactor to consolidate code would be a good idea.
 def display_profiled_column_evrs_as_section(
     evrs,
     column,
@@ -313,7 +314,7 @@ def display_profiled_column_evrs_as_section(
     else:
         display(HTML(html_to_display))
 
-
+#NOTE: all of these display* methods are pretty similar. A refactor to consolidate code would be a good idea.
 def display_column_evrs_as_section(
     evrs,
     column,
@@ -327,6 +328,40 @@ def display_column_evrs_as_section(
     #TODO: Handle the case where zero evrs match the column name
 
     document = ValidationResultsColumnSectionRenderer().render(column_evr_list).to_json_dict()
+    view = DefaultJinjaSectionView().render(
+        {
+            "section": document,
+            "section_loop": {"index": 1},
+        }
+    )
+
+    if include_styling:
+        html_to_display = bootstrap_link_element+cooltip_style_element+view
+    else:
+        html_to_display = view
+
+    if return_without_displaying:
+        return html_to_display
+    else:
+        display(HTML(html_to_display))
+
+#NOTE: all of these display* methods are pretty similar. A refactor to consolidate code would be a good idea.
+def display_evrs_as_section(
+    evrs,
+    only_include_failed_evrs=False,
+    include_styling=True,
+    return_without_displaying=False,
+):
+
+    #TODO: replace this with a generic utility function, preferably a method on an ExpectationSuite class
+    if only_include_failed_evrs:
+        evr_list = evrs.get_failed_results()
+    else:
+        evr_list = evrs.results
+    
+    #TODO: Handle the case where zero evrs match the column name
+
+    document = ValidationResultsSectionRenderer().render(evr_list).to_json_dict()
     view = DefaultJinjaSectionView().render(
         {
             "section": document,
