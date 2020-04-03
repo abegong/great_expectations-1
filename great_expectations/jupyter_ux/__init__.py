@@ -17,7 +17,10 @@ from great_expectations.render.renderer import (
 )
 from great_expectations.render.types import RenderedSectionContent
 from great_expectations.render.view import DefaultJinjaSectionView
+from great_expectations.profile.multidataset_profiler import MultiDatasetProfiler
 
+import pandas as pd
+import pylab as plt
 
 def set_data_source(context, data_source_type=None):
     """
@@ -379,6 +382,103 @@ def display_evrs_as_section(
     else:
         display(HTML(html_to_display))
 
+
+# TODO: This method should be a utility method on ExpectationSuiteValidationResult, and ExpectationSuite.
+# The method on ExpectationSuiteValidationResult should pass through to ExpectationSuite.
+def get_matching_results(validation_result, expectation_type, column):
+    matching_results = []
+
+    results = validation_result.results
+    for result in results:
+        if result.expectation_config["expectation_type"] == expectation_type:
+            if result.expectation_config["kwargs"]["column"] == column:
+                matching_results.append(result)
+                continue
+    
+    return matching_results
+
+# This method should be deprecated in favor of a Store method that accomplishes the same thing.
+def get_metric_series(
+    validation_result_list,
+    expectation_type,
+    column,
+    metric_statistic,
+):
+    metric_list = []
+    for validation_result in validation_result_list:
+        matching_results = get_matching_results(
+            validation_result,
+            expectation_type=expectation_type,
+            column=column,
+        )
+
+        assert len(matching_results) == 1
+
+        metric_list.append(matching_results[0].result[metric_statistic])
+        
+    metric_series = pd.Series(metric_list)
+    
+    return metric_series
+
+def display_expectation_validation_metric_plot(
+    validation_result_list,
+    expectation_type,
+    column,
+):
+    first_validation_result = validation_result_list[0]
+    expectation = get_matching_results(
+        first_validation_result,
+        expectation_type=expectation_type,
+        column=column,
+    )[0].expectation_config
+
+    evr_fields = MultiDatasetProfiler.evr_fields_by_expectation_type[expectation.expectation_type]
+    if evr_fields["method"] == "define_expectation_kwargs_for_a_single_value":
+        
+        source_field = evr_fields["kwargs"]["source_field"]
+        target_field = evr_fields["kwargs"]["target_field"]
+
+        expectation_metric = expectation.kwargs[target_field]
+        if target_field == "mostly":
+            expectation_metric = 100*(1-expectation_metric)
+
+        metrics = get_metric_series(
+            validation_result_list,
+            expectation_type=expectation_type,
+            column=column,
+            metric_statistic=source_field,
+        )
+
+        plt.bar(range(10,20), metrics[10:], label="Profiled")
+        plt.bar(range(10), metrics[:10], label="Unprofiled")
+        plt.hlines(expectation_metric, 0, 20, linestyles='dashed')
+        plt.title("Percent null in exit_velocity, segmented by batch")
+        plt.ylabel("Percent null")
+        plt.legend(loc='lower right')
+        plt.show()
+
+    elif evr_fields["method"] == "define_expectation_kwargs_for_min_and_max_values":
+        source_field = evr_fields["kwargs"]["source_field"]
+        min_value = expectation.kwargs["min_value"]
+        max_value = expectation.kwargs["max_value"]
+        
+        metrics = get_metric_series(
+            validation_result_list,
+            expectation_type=expectation_type,
+            column=column,
+            metric_statistic=source_field,
+        )
+
+        plt.bar(range(10,20), metrics[10:], label="Profiled")
+        plt.bar(range(10), metrics[:10], label="Unprofiled")
+        plt.hlines([min_value, max_value], 0, 20, linestyles='dashed')
+        plt.title("Percent null in exit_velocity, segmented by batch")
+        plt.ylabel("Percent null")
+        plt.legend(loc='lower right')
+        plt.show()
+
+    else:
+        raise ValueError("Unknown method type %s" % (evr_fields["method"],))
 
 # When importing the jupyter_ux module, we set up a preferred logging configuration
 logger = logging.getLogger("great_expectations")

@@ -71,6 +71,7 @@ class MultiDatasetProfiler(DataAssetProfiler):
             "kwargs" : {
                 "source_field" : "unexpected_percent",
                 "target_field" : "mostly",
+                "method": "max"
             }
         },
         "expect_column_values_to_be_in_set" : {
@@ -150,6 +151,10 @@ class MultiDatasetProfiler(DataAssetProfiler):
             target_value = value_series.mode()[0]
         elif method == "mean":
             target_value = value_series.mean()
+        elif method == "min":
+            target_value = value_series.min()
+        elif method == "max":
+            target_value = value_series.max()
         else:
             raise ValueError("Unknown method: "+method)
         
